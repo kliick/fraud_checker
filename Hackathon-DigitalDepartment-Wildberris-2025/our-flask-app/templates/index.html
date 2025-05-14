@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Проверка транзакций</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <header>
+    <div class="headercontent">
+      <div class="eventOrgs">
+        <div id="svg1" class="svg-container">
+          <object type="image/svg+xml" data="{{ url_for('static', filename='digital_dep.svg') }}"></object>
+        </div>
+        <span id="plus">+</span>
+        <div id="svg2" class="svg-container">
+          <object type="image/svg+xml" data="{{ url_for('static', filename='wildberries_logo.svg') }}" height="80"></object>
+        </div>
+      </div>
+      <div id="team">
+        <span>by team 7</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <h1>Проверка на мошенничество</h1>
+      <div class="form-switch" id="formSwitch">
+        <button id="uploadBtn" class="switch-btn active">Загрузить файл</button>
+        <button id="fillBtn" class="switch-btn">Заполнить форму</button>
+      </div>
+
+      <!-- Загрузка файла -->
+      <form id="predictForm" enctype="multipart/form-data">
+        <div id="dropZone">
+          <div id="dropZoneStatus">Загрузите файл</div>
+          <div id="fileName">CSV или JSON</div>
+          <input type="file" name="file" id="fileInput" accept=".csv,.json" required>
+        </div>
+      </form>
+
+      <!-- Форма для ручного ввода -->
+      <form id="manualForm" style="display:none">
+        <table id="singleInputTable">
+          <thead>
+            <tr>
+              <th>Параметр</th>
+              <th>Значение</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>user_id</td>
+              <td><input type="number" name="user_id" required class="no-spinner"></td>
+            </tr>
+            <tr>
+              <td>nm_id</td>
+              <td><input type="number" name="nm_id" required class="no-spinner"></td>
+            </tr>
+            <tr><td>CreatedDate</td><td><input type="datetime-local" name="CreatedDate" required></td></tr>
+            <tr>
+              <td>service</td>
+              <td>
+                <select name="service" required>
+                  <option value="nnsz">nnsz</option>
+                  <option value="ordo">ordo</option>
+                </select>
+              </td>
+            </tr>
+            <tr><td>total_ordered</td><td><input type="number" name="total_ordered" required></td></tr>
+            <tr>
+              <td>PaymentType</td>
+              <td>
+                <select name="PaymentType" required>
+                  <option value="csh">csh</option>
+                  <option value="crd">crd</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>IsPaid</td>
+              <td>
+                <select name="IsPaid" required>
+                  <option value="True">True</option>
+                  <option value="False">False</option>
+                </select>
+              </td>
+            </tr>
+            <tr><td>count_items</td><td><input type="number" name="count_items" required></td></tr>
+            <tr><td>unique_items</td><td><input type="number" name="unique_items" required></td></tr>
+            <tr><td>avg_unique_purchase</td><td><input type="number" step="any" name="avg_unique_purchase" required></td></tr>
+            <tr>
+              <td>is_courier</td>
+              <td>
+                <select name="is_courier" required>
+                  <option value="1">1 — курьер</option>
+                  <option value="0">0 — самовывоз</option>
+                </select>
+              </td>
+            </tr>
+            <tr><td>NmAge</td><td><input type="number" name="NmAge" required></td></tr>
+            <tr><td>Distance</td><td><input type="number" step="any" name="Distance" required></td></tr>
+            <tr><td>DaysAfterRegistration</td><td><input type="number" name="DaysAfterRegistration" required></td></tr>
+            <tr><td>number_of_orders</td><td><input type="number" name="number_of_orders" required></td></tr>
+            <tr><td>number_of_ordered_items</td><td><input type="number" name="number_of_ordered_items" required></td></tr>
+            <tr><td>mean_number_of_ordered_items</td><td><input type="number" step="any" name="mean_number_of_ordered_items" required></td></tr>
+            <tr><td>min_number_of_ordered_items</td><td><input type="number" name="min_number_of_ordered_items" required></td></tr>
+            <tr><td>max_number_of_ordered_items</td><td><input type="number" name="max_number_of_ordered_items" required></td></tr>
+            <tr><td>mean_percent_of_ordered_items</td><td><input type="number" step="any" name="mean_percent_of_ordered_items" required></td></tr>
+          </tbody>
+        </table>
+        <button type="submit">Отправить</button>
+      </form>
+
+      <div id="errorDiv"></div>
+
+      <div id="result" style="display:none;">
+        <div id="resultButtonsDiv">
+          <div id="back">
+            <button class="backButton" id="backIndexButton">
+              <img src="{{ url_for('static', filename='arrow.png') }}" alt="Arrow">
+            </button>
+          </div>
+          <button onclick="downloadCSV()" id="exportCsvButton" class="exportButton">Скачать CSV</button>
+          <button onclick="downloadJSON()" id="exportJsonButton" class="exportButton">Скачать JSON</button>
+        </div>
+        <div id="resultTableDiv">
+          <table id="resultTable">
+            <colgroup>
+              <col style="width: 10%">
+              <col style="width: 40%">
+              <col style="width: 50%">
+            </colgroup>
+          <thead>
+            <tr>
+              <th>№</th>
+              <th>Предсказание</th>
+              <th>Уверенность</th>
+            </tr>
+          </thead>
+          <tbody id="resultTableBody"></tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+  <script>
+    // Функция переключения между формами
+    document.getElementById('uploadBtn').addEventListener('click', function() {
+      document.getElementById('predictForm').style.display = 'block';
+      document.getElementById('manualForm').style.display = 'none';
+      document.getElementById('uploadBtn').classList.add('active');
+      document.getElementById('fillBtn').classList.remove('active');
+    });
+
+    document.getElementById('fillBtn').addEventListener('click', function() {
+      document.getElementById('predictForm').style.display = 'none';
+      document.getElementById('manualForm').style.display = 'block';
+      document.getElementById('fillBtn').classList.add('active');
+      document.getElementById('uploadBtn').classList.remove('active');
+    });
+
+    // При отправке формы с данными
+    document.getElementById('manualForm').addEventListener('submit', function(event) {
+      event.preventDefault();  // Останавливаем стандартную отправку формы
+
+      const formData = new FormData(this);
+
+      // Отправляем данные на сервер через AJAX
+      fetch('/predict_form', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          document.getElementById('errorDiv').innerHTML = data.error;
+          document.getElementById('errorDiv').style.display = 'block';
+        } else {
+          document.getElementById('result').style.display = 'block';
+          const resultTableBody = document.getElementById('resultTableBody');
+          resultTableBody.innerHTML = '';
+
+          data.prediction.forEach((prediction, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${index + 1}</td>
+              <td>${prediction}</td>
+              <td>${parseFloat(data.probability[index]).toFixed(4)}</td>
+            `;
+            resultTableBody.appendChild(row);
+          });
+        }
+      })
+      .catch(error => {
+        document.getElementById('errorDiv').innerHTML = "Ошибка при обработке данных";
+        document.getElementById('errorDiv').style.display = 'block';
+      });
+    });
+
+    // Инициализация нажатой кнопки
+    document.getElementById('uploadBtn').click();
+  </script>
+
+</body>
+</html>
+
+
